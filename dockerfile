@@ -28,10 +28,18 @@ RUN apt-get update && \
     curl -fsSL https://pkgs.tailscale.com/stable/debian/bullseye.tailscale-keyring.list | tee /etc/apt/sources.list.d/tailscale.list && \
     apt-get update && \
     apt-get install -y tailscale && \
-    # Instalar RustDesk Server
-    wget "https://github.com/rustdesk/rustdesk-server/releases/download/${RUSTDESK_VERSION}/rustdesk-server-hbbr_${RUSTDESK_VERSION}_amd64.deb" -O /tmp/rustdesk-server-hbbr.deb && \
-    wget "https://github.com/rustdesk/rustdesk-server/releases/download/${RUSTDESK_VERSION}/rustdesk-server-hbbs_${RUSTDESK_VERSION}_amd64.deb" -O /tmp/rustdesk-server-hbbs.deb && \
-    dpkg -i /tmp/rustdesk-server-hbbr.deb /tmp/rustdesk-server-hbbs.deb && \
+    #
+    # --- BLOCO CORRIGIDO PARA INSTALAÇÃO DO RUSTDESK ---
+    #
+    # 1. Baixar os dois pacotes .deb separados para hbbs e hbbr.
+    wget "https://github.com/rustdesk/rustdesk-server/releases/download/${RUSTDESK_VERSION}/rustdesk-server-hbbs_${RUSTDESK_VERSION}_amd64.deb" -O /tmp/rustdesk-hbbs.deb && \
+    wget "https://github.com/rustdesk/rustdesk-server/releases/download/${RUSTDESK_VERSION}/rustdesk-server-hbbr_${RUSTDESK_VERSION}_amd64.deb" -O /tmp/rustdesk-hbbr.deb && \
+    # 2. Usar 'apt install' nos arquivos .deb locais. Isso resolve as dependências automaticamente,
+    #    o que é mais robusto do que usar 'dpkg -i' seguido por 'apt --fix-broken install'.
+    apt-get install -y /tmp/rustdesk-hbbs.deb /tmp/rustdesk-hbbr.deb && \
+    #
+    # --- FIM DO BLOCO CORRIGIDO ---
+    #
     # Limpeza
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
