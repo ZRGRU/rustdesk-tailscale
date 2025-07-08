@@ -4,7 +4,7 @@ name: Build and Push Docker Image
 # Gatilho: este workflow roda sempre que houver um push na branch 'main'.
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "master" ]
 
 # 'jobs' são as tarefas que o workflow executa.
 jobs:
