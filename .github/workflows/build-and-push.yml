@@ -1,0 +1,42 @@
+# Nome do nosso workflow. Aparecerá na aba "Actions" do GitHub.
+name: Build and Push Docker Image
+
+# Gatilho: este workflow roda sempre que houver um push na branch 'main'.
+on:
+  push:
+    branches: [ "main" ]
+
+# 'jobs' são as tarefas que o workflow executa.
+jobs:
+  # Definimos um único job chamado 'build-and-push'.
+  build-and-push:
+    # O tipo de máquina virtual que o nosso robô usará. 'ubuntu-latest' é comum.
+    runs-on: ubuntu-latest
+
+    # 'steps' são os comandos sequenciais dentro de um job.
+    steps:
+      # 1. Primeiro, o robô precisa do nosso código.
+      # Esta action oficial do GitHub faz o checkout do nosso repositório.
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # 2. Login no Docker Hub.
+      # Aqui usamos os segredos que configuramos!
+      # O GitHub Actions passa os valores de forma segura para esta 'action'.
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+
+      # 3. Construir e enviar a imagem Docker.
+      # Esta action cuida de todo o processo de build e push.
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          # Constrói a partir do Dockerfile no diretório atual.
+          context: .
+          # Envia a imagem para o registro após o build.
+          push: true
+          # Nomeia e taga a imagem. Ex: "meu-usuario/rustdesk-server:latest"
+          tags: ${{ secrets.DOCKER_USERNAME }}/rustdesk-server:latest
