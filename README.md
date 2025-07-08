@@ -4,9 +4,20 @@ Este repositório contém um Dockerfile e scripts para criar uma imagem Docker q
 
 ## Estrutura do Repositório
 
+rustdesk-tailscale/
+├── Dockerfile
+├── supervisord.conf
+├── entrypoint.sh
+├── docker-compose.yml
+├── .env.example
+└── .gitignore
+
 - `Dockerfile`: Define a imagem Docker, instalando o RustDesk e o Tailscale.
 - `entrypoint.sh`: Script de entrada que configura o Tailscale e inicia o RustDesk.
 - `supervisord.conf`: Configuração do Supervisor para gerenciar os processos do Tailscale e do RustDesk.
+- `docker-compose.yml`: Arquivo de configuração do Docker Compose para facilitar a execução do contêiner.
+- `.env.example`: Exemplo de arquivo de variáveis de ambiente, que deve ser renomeado para `.env` e preenchido com os dados necessários.
+- `.gitignore`: Lista de arquivos e diretórios a serem ignorados pelo Git.
 
 ## Instruções de Uso
 
