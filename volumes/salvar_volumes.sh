@@ -4,5 +4,4 @@
 CONTAINER_NAME="rustdesk-tailscale"
 VOLUME_NAME="rustdesk_data"
 
-sudo cp -r "/var/lib/docker/volumes/${CONTAINER_NAME}_${VOLUME_NAME}/_data" "./${CONTAINER_NAME}_${VOLUME_NAME}/_data"
-
+sudo cp -r "/var/lib/docker/volumes/${CONTAINER_NAME}_${VOLUME_NAME}/" ./
