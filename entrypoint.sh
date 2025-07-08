@@ -25,15 +25,14 @@ echo "===================================================================="
 echo "Tailscale iniciado com sucesso como '${TS_HOSTNAME}'."
 echo "===================================================================="
 
-# --- LÓGICA DA CHAVE PERSISTENTE DO RUSTDESK ---
+# --- LÓGICA DA CHAVE PERSISTENTE DO RUSTDESK (ATUALIZADA) ---
 KEY_FILE="/data/id_ed25519"
 
 if [ ! -f "$KEY_FILE" ]; then
     echo "Chave privada do RustDesk não encontrada em ${KEY_FILE}."
     echo "Gerando uma nova chave..."
-    # O comando hbbs sem parâmetros e com -d gera a chave no diretório especificado
-    # e exibe a chave pública.
-    /usr/bin/hbbs -d /data
+    # MUDANÇA: Executa o comando hbbs dentro do diretório /data para que ele crie as chaves lá.
+    (cd /data && /usr/bin/hbbs)
     echo "Nova chave privada gerada e armazenada em ${KEY_FILE}."
     echo "Esta chave será reutilizada em futuras execuções se o volume for mantido."
 else
@@ -43,8 +42,8 @@ fi
 
 echo ""
 echo "--- SUA CHAVE PÚBLICA DO RUSTDESK ---"
-# Extrai e exibe a chave pública do arquivo de chave privada
-PUBLIC_KEY=$(/usr/bin/hbbs -d /data --get-key)
+# MUDANÇA: Extrai a chave pública executando o comando a partir do diretório /data.
+PUBLIC_KEY=$(cd /data && /usr/bin/hbbs --get-key)
 echo "Key: ${PUBLIC_KEY}"
 echo "-------------------------------------"
 echo "Use o IP do Tailscale deste servidor e a chave pública acima nos seus clientes RustDesk."
