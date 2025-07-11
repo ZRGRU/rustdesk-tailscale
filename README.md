@@ -18,6 +18,7 @@ rustdesk-tailscale/
 ├── .github
 │   └── workflows
 ├── .gitignore
+├── .pre-commit-config.yaml
 ├── README.md
 ├── supervisord.conf
 └── volumes
@@ -46,6 +47,9 @@ Pasta que armazena arquivos de workflow do GitHub Actions, usados para automaç�
 
 - `.gitignore`
 Lista de arquivos e pastas que o Git deve ignorar, evitando que arquivos desnecessários ou sensíveis sejam versionados.
+
+- `.pre-commit-config.yaml`
+Configuração do Pre-commit, uma ferramenta que executa verificações de qualidade de código antes de cada commit. Define quais verificações devem ser executadas, como formatação de código, linting, etc.
 
 - `README.md`
 Arquivo de documentação principal do projeto. Explica como instalar, configurar e usar o projeto.
@@ -77,7 +81,7 @@ Exemplo de backup de volume Docker que armazena dados persistentes do RustDesk, 
 
    ```bash
    mkdir ~/pasta-de-projetos
-   cd ~/pasta-de-projetos 
+   cd ~/pasta-de-projetos
    git clone https://github.com/ZRGRU/rustdesk-tailscale.git
    ```
 
