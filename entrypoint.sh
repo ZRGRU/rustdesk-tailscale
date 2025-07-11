@@ -13,7 +13,7 @@ TS_HOSTNAME=${TS_HOSTNAME:-rustdesk-server}
 
 # Inicia o daemon do Tailscale em segundo plano
 /usr/sbin/tailscaled --state=/var/lib/tailscale/tailscaled.state --socket=/var/run/tailscale/tailscaled.sock &
-PID_TAILSCALED=$!
+# PID_TAILSCALED=$! # MUDANÇA: Não captura o PID, pois não é necessário para o Supervisor
 
 # Espera um pouco para o daemon iniciar
 sleep 3

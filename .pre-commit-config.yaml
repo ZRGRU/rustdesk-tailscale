@@ -1,0 +1,36 @@
+# Arquivo de configuração para o pre-commit
+# Define os hooks que serão executados antes de cada commit.
+
+repos:
+  # Coleção de hooks padrão e muito úteis
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0  # Use a versão mais recente
+    hooks:
+      # Garante que os arquivos não terminem com espaços em branco
+      - id: trailing-whitespace
+      # Garante que os arquivos terminem com uma nova linha
+      - id: end-of-file-fixer
+      # Verifica a sintaxe de arquivos YAML
+      - id: check-yaml
+      # Verifica se não há conflitos de merge não resolvidos
+      - id: check-added-large-files
+      # Tenta detectar chaves privadas acidentalmente adicionadas
+      - id: detect-private-key
+
+  # Hook específico para verificar o Dockerfile com Hadolint
+  - repo: https://github.com/hadolint/hadolint
+    rev: v2.12.0 # Use a versão mais recente
+    hooks:
+      - id: hadolint
+
+  # Hook específico para verificar scripts de shell (.sh)
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.10.0.1
+    hooks:
+    -   id: shellcheck
+
+  # verifica secrets em arquivos de texto
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.24.2
+    hooks:
+      - id: gitleaks
