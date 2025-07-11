@@ -4,39 +4,44 @@
 FROM debian:bullseye-slim
 
 # =========================================================================
+# Define o SHELL para garantir que pipelines falhem corretamente.
+# =========================================================================
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+# =========================================================================
 # Argumentos e Variáveis de Ambiente
 # =========================================================================
 ARG RUSTDESK_VERSION=1.1.14
 ENV DEBIAN_FRONTEND=noninteractive
 
 # =========================================================================
-# SOLUÇÃO PARA DL4006: Garante que os pipelines falhem se qualquer comando falhar
-# =========================================================================
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-
-# =========================================================================
 # Instalação de Dependências, Tailscale e RustDesk Server
 # =========================================================================
+# hadolint ignore=DL3008
 RUN apt-get update && \
-    # SOLUÇÃO PARA DL4001: Remove 'curl' e usa apenas 'wget'
+    # Deixamos o apt resolver as dependências base, o que é mais robusto.
     apt-get install -y --no-install-recommends \
-    ca-certificates=20250419 \
-    gnupg=2.4.7-21 \
-    supervisor=4.2.5-3 \
-    wget=1.25.0-2 && \
-    # SOLUÇÃO PARA DL4001: Trocamos 'curl' por 'wget -qO-'
+    ca-certificates \
+    gnupg \
+    supervisor \
+    wget && \
+    # Adiciona a chave e o repositório do Tailscale
     wget -qO- https://pkgs.tailscale.com/stable/debian/bullseye.noarmor.gpg | tee /usr/share/keyrings/tailscale-archive-keyring.gpg >/dev/null && \
     wget -qO- https://pkgs.tailscale.com/stable/debian/bullseye.tailscale-keyring.list | tee /etc/apt/sources.list.d/tailscale.list && \
+    # Atualiza a lista de pacotes novamente após adicionar o repo do Tailscale
     apt-get update && \
-    # SOLUÇÃO PARA DL3015: Adicionamos --no-install-recommends
-    # SOLUÇÃO PARA DL3008 (Opcional): Você pode pinar a versão, ex: tailscale=1.52.1-1
-    apt-get install -y --no-install-recommends tailscale=1.84.0 && \
+    # Aqui sim podemos pinar a versão do Tailscale se quisermos, pois vem do repo.
+    # Mas deixar sem a versão instala a mais recente, o que é bom para projetos pessoais.
+    apt-get install -y --no-install-recommends tailscale && \
     #
-    # --- Bloco de instalação do RustDesk (já usando wget) ---
+    # --- Bloco de instalação do RustDesk ---
     #
     wget -q "https://github.com/rustdesk/rustdesk-server/releases/download/${RUSTDESK_VERSION}/rustdesk-server-hbbs_${RUSTDESK_VERSION}_amd64.deb" -O /tmp/rustdesk-hbbs.deb && \
     wget -q "https://github.com/rustdesk/rustdesk-server/releases/download/${RUSTDESK_VERSION}/rustdesk-server-hbbr_${RUSTDESK_VERSION}_amd64.deb" -O /tmp/rustdesk-hbbr.deb && \
-    apt-get install -y --no-install-recommends /tmp/rustdesk-hbbs.deb=1.1.14 /tmp/rustdesk-hbbr.deb=1.1.14 && \
+    #
+    # --- SOLUÇÃO: Removido o "=versão" ao instalar arquivos .deb locais ---
+    #
+    apt-get install -y --no-install-recommends /tmp/rustdesk-hbbs.deb /tmp/rustdesk-hbbr.deb && \
     #
     # --- Limpeza ---
     #
