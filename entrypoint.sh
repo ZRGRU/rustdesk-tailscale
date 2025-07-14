@@ -1,54 +1,55 @@
 #!/bin/bash
 set -e
 
-# Verifica se a chave de autenticação do Tailscale foi passada
-if [ -z "${TS_AUTH_KEY}" ]; then
-  echo "ERRO: A variável de ambiente TS_AUTH_KEY não foi definida."
-  echo "Por favor, forneça sua chave de autenticação do Tailscale."
-  exit 1
+# Define o caminho para o arquivo de estado do Tailscale
+TAILSCALE_STATE_FILE="/data/tailscaled.state"
+
+# --- LÓGICA DE CONFIGURAÇÃO ÚNICA DO TAILSCALE ---
+# Apenas executa a configuração 'up' na primeira vez, se necessário.
+# O daemon em si será gerenciado pelo Supervisor.
+
+if [ ! -f "$TAILSCALE_STATE_FILE" ]; then
+    echo "Estado do Tailscale não encontrado. Realizando a autenticação inicial..."
+    if [ -z "${TS_AUTH_KEY}" ]; then
+      echo "ERRO FATAL: O estado do Tailscale não existe e a TS_AUTH_KEY não foi definida."
+      exit 1
+    fi
+
+    # Inicia o daemon TEMPORARIAMENTE para fazer a autenticação
+    /usr/sbin/tailscaled --state="$TAILSCALE_STATE_FILE" --socket=/var/run/tailscale/tailscaled.sock &
+    sleep 3
+
+    # Autentica e efetivamente cria o arquivo de estado
+    /usr/bin/tailscale up --authkey="${TS_AUTH_KEY}" --hostname="${TS_HOSTNAME:-rustdesk-server}" --accept-routes
+
+    # Para o daemon temporário para que o Supervisor possa assumir o controle
+    pkill tailscaled
+    sleep 1
+    echo "Autenticação inicial concluída. O estado do Tailscale foi criado."
+else
+    echo "Estado do Tailscale encontrado. O Supervisor irá gerenciar a conexão."
 fi
 
-# Define o nome do host para o Tailscale, ou usa um padrão
-TS_HOSTNAME=${TS_HOSTNAME:-rustdesk-server}
-
-# Inicia o daemon do Tailscale em segundo plano
-/usr/sbin/tailscaled --state=/var/lib/tailscale/tailscaled.state --socket=/var/run/tailscale/tailscaled.sock &
-# PID_TAILSCALED=$! # MUDANÇA: Não captura o PID, pois não é necessário para o Supervisor
-
-# Espera um pouco para o daemon iniciar
-sleep 3
-
-# Conecta à sua tailnet
-/usr/bin/tailscale up --authkey="${TS_AUTH_KEY}" --hostname="${TS_HOSTNAME}" --accept-routes
-
-echo "===================================================================="
-echo "Tailscale iniciado com sucesso como '${TS_HOSTNAME}'."
 echo "===================================================================="
 
-# --- LÓGICA DA CHAVE PERSISTENTE DO RUSTDESK (ATUALIZADA) ---
+# --- LÓGICA DA CHAVE DO RUSTDESK (sem alterações) ---
 KEY_FILE="/data/id_ed25519"
-
 if [ ! -f "$KEY_FILE" ]; then
-    echo "Chave privada do RustDesk não encontrada em ${KEY_FILE}."
-    echo "Gerando uma nova chave..."
-    # MUDANÇA: Executa o comando hbbs dentro do diretório /data para que ele crie as chaves lá.
+    echo "Chave privada do RustDesk não encontrada. Gerando uma nova chave..."
     (cd /data && /usr/bin/hbbs)
-    echo "Nova chave privada gerada e armazenada em ${KEY_FILE}."
-    echo "Esta chave será reutilizada em futuras execuções se o volume for mantido."
+    echo "Nova chave privada gerada."
 else
-    echo "Chave privada do RustDesk encontrada em ${KEY_FILE}."
-    echo "Usando a chave existente para garantir que os clientes não precisem de reconfiguração."
+    echo "Chave privada do RustDesk encontrada."
 fi
 
 echo ""
 echo "--- SUA CHAVE PÚBLICA DO RUSTDESK ---"
-# MUDANÇA: Extrai a chave pública executando o comando a partir do diretório /data.
-PUBLIC_KEY=$(cd /data && /usr/bin/hbbs --get-key)
+PUBLIC_KEY=$(cat /data/id_ed25519.pub)
 echo "Key: ${PUBLIC_KEY}"
 echo "-------------------------------------"
-echo "Use o IP do Tailscale deste servidor e a chave pública acima nos seus clientes RustDesk."
 echo ""
 
-# Inicia o Supervisor em primeiro plano para manter o contêiner em execução
-echo "Iniciando os serviços RustDesk via Supervisor..."
+# Agora, passa o controle TOTAL para o Supervisor. Ele será o único
+# responsável por iniciar e manter tailscaled, hbbs e hbbr.
+echo "Iniciando o Supervisor para gerenciar todos os serviços..."
 exec /usr/bin/supervisord -c /etc/supervisor/supervisord.conf
