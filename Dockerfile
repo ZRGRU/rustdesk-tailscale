@@ -23,6 +23,7 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     ca-certificates \
     gnupg \
+    procps \
     supervisor \
     wget && \
     # Adiciona a chave e o repositório do Tailscale
